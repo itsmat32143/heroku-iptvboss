@@ -50,6 +50,8 @@ ENV USER=iptvboss \
     NOVNC_PORT=$PORT \
     NOVNC_HOME=/home/iptvboss/noVNC 
 
+RUN echo $PORT
+
 RUN set -xe \
   && mkdir -p $NOVNC_HOME/utils/websockify \
   && wget -qO- https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz | tar xz --strip 1 -C $NOVNC_HOME \
