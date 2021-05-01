@@ -47,7 +47,7 @@ ENV USER=iptvboss \
     VNC_PORT=5900 \
     VNC_RESOLUTION=1280x960 \
     VNC_COL_DEPTH=24  \
-    NOVNC_PORT=5800 \
+    NOVNC_PORT=$PORT \
     NOVNC_HOME=/home/iptvboss/noVNC 
 
 RUN set -xe \
