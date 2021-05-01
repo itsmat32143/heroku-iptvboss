@@ -58,9 +58,7 @@ RUN set -xe \
   && ln -s $NOVNC_HOME/vnc.html $NOVNC_HOME/index.html
 
 
-EXPOSE 5800
-
 #COPY src/ui.js $NOVNC_HOME/app/
-#COPY src/run_init /usr/bin/
+COPY src/run_init /usr/bin/
 
 CMD ["bash", "/usr/bin/run_init"]
