@@ -18,7 +18,7 @@ if [ ! -d $HOME/iptvboss ]; then
   echo 'sceneHeight: 936.0' > $HOME/iptvboss/config.yaml
   echo 'sceneWidth: 1270.0' >> $HOME/iptvboss/config.yaml
 fi
-wget -O $HOME/iptvboss/iptvboss.jar "https://www.dropbox.com/s/0v5uil9k6uir7an/IPTVBoss.jar?dl=1"
+wget -qO $HOME/iptvboss/iptvboss.jar "https://www.dropbox.com/s/a2pu3z3qwkw5mdg/IPTVBoss.jar?dl=1"
 
 if [ ! -d $HOME/jdk-15.0.1-full ]; then
   wget -qO- "https://download.bell-sw.com/java/15.0.1+9/bellsoft-jdk15.0.1+9-linux-amd64-full.tar.gz" | tar xz -C $HOME
