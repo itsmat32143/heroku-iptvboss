@@ -31,5 +31,6 @@ fi
 $NOVNC_HOME/utils/launch.sh --vnc localhost:$VNC_PORT --listen $PORT &
 Xvfb $DISPLAY -screen 0 "$VNC_RESOLUTION"x"$VNC_COL_DEPTH" &
 cd $HOME/iptvboss;$HOME/jdk-15.0.1-full/bin/java --module-path $HOME/jdk-15.0.1-full/jmods -jar iptvboss.jar &
-x11vnc -xkb -noxrecord -noxfixes -noxdamage -permitfiletransfer -tightfilexfer -display $DISPLAY -forever -o $HOME/.x11vnc/x11vnc.log -bg && tail -f $HOME/.x11vnc/x11vnc.log
+x11vnc -storepasswd $VNCPASSWORD $HOME/vncpasswd
+x11vnc -xkb -noxrecord -noxfixes -noxdamage -permitfiletransfer -tightfilexfer -rfbauth $HOME/vncpasswd -display $DISPLAY -forever -o $HOME/.x11vnc/x11vnc.log -bg && tail -f $HOME/.x11vnc/x11vnc.log
 
