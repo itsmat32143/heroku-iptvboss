@@ -4,7 +4,7 @@
 # setup environment
 set -xe
 source /etc/profile
-cd $HOME
+export HOME="/home/iptvboss"
 
 #
 # clean up X environment
