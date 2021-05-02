@@ -15,15 +15,12 @@ RUN set -xe; \
       cron \
       git \
       net-tools \
+      openbox \
       x11vnc \
       xterm \
       xvfb
 
 RUN locale-gen en_US.UTF-8
-
-RUN set -xe; \
-    apt-get update; \
-    apt-get install -y openbox
 
 RUN addgroup iptvboss \
     && adduser --home /home/iptvboss --gid 1000 --shell /bin/bash iptvboss \
@@ -48,9 +45,7 @@ ENV USER=iptvboss \
     VNC_RESOLUTION=1280x960 \
     VNC_COL_DEPTH=24  \
     NOVNC_PORT=$PORT \
-    NOVNC_HOME=/home/iptvboss/noVNC 
-
-RUN echo $PORT
+    NOVNC_HOME=/home/iptvboss/noVNC
 
 RUN set -xe \
   && mkdir -p $NOVNC_HOME/utils/websockify \
@@ -60,7 +55,7 @@ RUN set -xe \
   && ln -s $NOVNC_HOME/vnc.html $NOVNC_HOME/index.html
 
 
-#COPY src/ui.js $NOVNC_HOME/app/
+COPY src/ui.js $NOVNC_HOME/app/
 COPY src/run_init /usr/bin/
 
 CMD ["bash", "/usr/bin/run_init"]
