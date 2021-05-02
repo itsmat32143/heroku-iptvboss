@@ -4,89 +4,41 @@
 # setup environment
 set -xe
 source /etc/profile
+cd $HOME
 
 #
 # clean up X environment
 rm -rf /tmp/.X*
 mkdir -p "$HOME/.x11vnc"
-sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
-echo $TZ | sudo tee /etc/timezone
-sudo dpkg-reconfigure -f noninteractive tzdata
-
-#
-# setup ssh keys
-if [ ! -d /app/ssh ]; then
-  mkdir -p /app/ssh
-  ssh-keygen -t rsa -N '' -f /app/ssh/id_rsa
-fi
-cat /app/ssh/id_rsa.pub
 
 #
 # setup iptvboss environment
-wget -qO /app/iptvboss.jar "https://www.dropbox.com/s/ifw4ke8fvm4cl7v/IPTVBoss.jar?dl=1"
+if [ ! -d $HOME/iptvboss ]; then
+  mkdir -p $HOME/iptvboss
+  echo 'sceneHeight: 936.0' > $HOME/iptvboss/config.yaml
+  echo 'sceneWidth: 1270.0' >> $HOME/iptvboss/config.yaml
+fi
+wget -qO $HOME/iptvboss.jar "https://www.dropbox.com/s/ifw4ke8fvm4cl7v/IPTVBoss.jar?dl=1"
 
-if [ ! -d /opt/jdk-15.0.1-full ]; then
-  sudo wget -qO- "https://download.bell-sw.com/java/15.0.1+9/bellsoft-jdk15.0.1+9-linux-amd64-full.tar.gz" | sudo tar xz -C /opt
-fi
-if [ ! -f /app/config.yaml && ! -f /app/settings.yaml ]; then
-  echo 'sceneHeight: 936.0' > /app/config.yaml
-  echo 'sceneWidth: 1270.0' >> /app/config.yaml
-fi
-if [ ! -f /app/crontab ]; then
-  echo '0 6 * * * /home/iptvboss/appinit.sh >> /home/iptvboss/cron.log 2>&1' > /app/crontab
-  echo '0 12 * * * /home/iptvboss/appinit.sh >> /home/iptvboss/cron.log 2>&1' >> /app/crontab
-  echo '0 18 * * * /home/iptvboss/appinit.sh >> /home/iptvboss/cron.log 2>&1' >> /app/crontab
-fi
-if [ ! -f $HOME/cron.log ]; then
-  touch $HOME/cron.log
+if [ ! -d $HOME/jdk-15.0.1-full ]; then
+  wget -qO- "https://download.bell-sw.com/java/15.0.1+9/bellsoft-jdk15.0.1+9-linux-amd64-full.tar.gz" | tar xz -C $HOME
 fi
 
 #
 # build appinit script
 echo "#!/bin/bash" > $HOME/appinit.sh
-echo "export LD_LIBRARY_PATH=/opt/jdk-15.0.1-full/lib" >> $HOME/appinit.sh
-echo "export PATH_TO_FX=/opt/jdk-15.0.1-full/lib" >> $HOME/appinit.sh
+echo "export LD_LIBRARY_PATH=$HOME/jdk-15.0.1-full/lib" >> $HOME/appinit.sh
+echo "export PATH_TO_FX=$HOME/jdk-15.0.1-full/lib" >> $HOME/appinit.sh
 echo "export DISPLAY=:0" >> $HOME/appinit.sh
-echo "export JSPORTS_USERNAME=$JSPORTS_USERNAME" >> $HOME/appinit.sh
-echo "export JSPORTS_PASSWORD=$JSPORTS_PASSWORD" >> $HOME/appinit.sh
-echo "export SCPENABLE=$SCPENABLE" >> $HOME/appinit.sh
-echo "if [ -f /app/addons/jsports/jsports ]; then" >> $HOME/appinit.sh
-echo "  cd /app/addons/jsports;./jsports.sh" >> $HOME/appinit.sh
-echo "fi" >> $HOME/appinit.sh
 echo "killall java" >> $HOME/appinit.sh
-echo "cd /app;/opt/jdk-15.0.1-full/bin/java --module-path /opt/jdk-15.0.1-full/jmods -jar iptvboss.jar -noGui" >> $HOME/appinit.sh
-echo 'if [ $SCPENABLE == "yes" ]; then' >> $HOME/appinit.sh
-echo '  if [ -z $(find /app/output/* -maxdepth 1 -type d -printf ".") ]; then' >> $HOME/appinit.sh
-echo "    scp -i /app/ssh/id_rsa -o StrictHostKeyChecking=no /app/output/* $SCPID@$SCPHOST:$SCPPATH" >> $HOME/appinit.sh
-echo "  else" >> $HOME/appinit.sh
-echo "    scp -i /app/ssh/id_rsa -o StrictHostKeyChecking=no /app/output/*/* $SCPID@$SCPHOST:$SCPPATH" >> $HOME/appinit.sh
-echo "  fi" >> $HOME/appinit.sh
-echo "fi" >> $HOME/appinit.sh
-echo "cd /app;/opt/jdk-15.0.1-full/bin/java --module-path /opt/jdk-15.0.1-full/jmods -jar iptvboss.jar &" >> $HOME/appinit.sh
+echo "cd $HOME/iptvboss;$HOME/jdk-15.0.1-full/bin/java --module-path $HOME/jdk-15.0.1-full/jmods -jar iptvboss.jar -noGui" >> $HOME/appinit.sh
+echo "cd $HOME/iptvboss;$HOME/jdk-15.0.1-full/bin/java --module-path $HOME/jdk-15.0.1-full/jmods -jar iptvboss.jar &" >> $HOME/appinit.sh
 chmod +x -v $HOME/appinit.sh
-
-#
-# implement addons
-if [ "$JSPORTS_USERNAME" != "username" ] || [ "$JSPORTS_USERNAME" != "" ]; then
-  mkdir -p /app/addons/jsports
-  echo "#!/bin/bash" > /app/addons/jsports/jsports.sh
-  echo 'if [ $JSPORTS_USERNAME != "username" ] || [ $JSPORTS_USERNAME != "" ]; then' >> /app/addons/jsports/jsports.sh
-  echo "  cd /app/addons/jsports/;./jsports -user=$JSPORTS_USERNAME -pass=$JSPORTS_PASSWORD $JSPORTS_PARAMS" >> /app/addons/jsports/jsports.sh
-  echo "fi" >> /app/addons/jsports/jsports.sh
-  wget -qO /app/addons/jsports/jsports.7z "http://cm.jovialservices.me/JarvisSports-UBU.7z"
-  cd /app/addons/jsports; p7zip -d -f jsports.7z; rm *.pdf; mv JarvisSports jsports; chmod +x jsports jsports.sh
-  ./jsports.sh
-fi
-
-#
-# setup cron environment
-crontab /app/crontab
-sudo cron
 
 #
 # start the display environment for iptvboss
 /usr/bin/openbox &
 $NOVNC_HOME/utils/launch.sh --vnc localhost:$VNC_PORT --listen $PORT &
 Xvfb $DISPLAY -screen 0 "$VNC_RESOLUTION"x"$VNC_COL_DEPTH" &
-cd /app;/opt/jdk-15.0.1-full/bin/java --module-path /opt/jdk-15.0.1-full/jmods -jar iptvboss.jar &
-x11vnc -xkb -noxrecord -noxfixes -noxdamage -permitfiletransfer -tightfilexfer -display $DISPLAY -forever -o $HOME/.x11vnc/x11vnc.log -bg && tail -f $HOME/cron.log $HOME/.x11vnc/x11vnc.log
+cd $HOME/iptvboss;$HOME/jdk-15.0.1-full/bin/java --module-path $HOME/jdk-15.0.1-full/jmods -jar iptvboss.jar &
+x11vnc -xkb -noxrecord -noxfixes -noxdamage -permitfiletransfer -tightfilexfer -display $DISPLAY -forever -o $HOME/.x11vnc/x11vnc.log -bg && tail -f $HOME/.x11vnc/x11vnc.log
